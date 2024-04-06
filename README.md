@@ -1,5 +1,7 @@
 # Design Patterns in Test Automation
 
+![Alt Text](design-partten.png)
+
 ## Introduction
 Design patterns play a crucial role in test automation by providing reusable solutions to common problems encountered in test script development. They promote best practices, enhance maintainability, and improve scalability in test automation projects. This README discusses the significance of design patterns in test automation and explores some commonly used patterns.
 
