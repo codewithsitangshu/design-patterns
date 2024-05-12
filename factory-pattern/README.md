@@ -1,5 +1,7 @@
 # Factory Design Pattern
 
+![Alt Text](factory-pattern.gif)
+
 ## Introduction
 
 Factory Pattern is one of the creation Patterns. It is mostly used when we need to create an object from one of several possible classes that share a common implements an interface. It creates objects without exposing the instantiation logic to the user. We, as the user, refer to the newly created object through a common interface.
