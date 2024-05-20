@@ -20,3 +20,5 @@ Learning Design Patterns equips us with the knowledge to recognize when and how 
 [Factory Design Pattern](factory-pattern/README.md)
 
 [Strategy Design Pattern](strategy-pattern/README.md)
+
+[Command Design Pattern](command-partten\README.md)
