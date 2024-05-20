@@ -3,7 +3,7 @@ package com.org.codewithsitangshu;
 import com.org.codewithsitangshu.pages.HomePage;
 import com.org.codewithsitangshu.pages.category.SelectCategory;
 import org.testng.Assert;
-import org.testng.annotations.BeforeMethod;
+import org.testng.annotations.BeforeTest;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
@@ -12,7 +12,7 @@ public class SelectCategoryTest extends BaseTest {
     private HomePage homePage;
     private SelectCategory selectCategory;
 
-    @BeforeMethod
+    @BeforeTest
     public void init() {
         this.homePage = new HomePage(this.driver);
         this.selectCategory = new SelectCategory(this.driver);
