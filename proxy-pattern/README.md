@@ -17,7 +17,7 @@ This pattern is invaluable when you need to manage access rights across various 
 
 ## Application overview
 
-<img src="app.png" width="100%" height="auto">
+<img src="app-logo.png" width="100%" height="auto">
 
 In the given application architecture, the workflow for automating the process of placing an order is structured to accommodate different payment methods and environment-specific conditions. Here's how the application flow is structured:
 
