@@ -51,6 +51,178 @@ Once the order is placed in the QA/Dev environment, the system generates an Orde
 ### 6. End of Process
 The process concludes after the order confirmation. In cases where the environment is Staging or Production, the process ends without placing the order.
 
+## Code
 
+Proxy design pattern allows us to create a wrapper/proxy class over a real object. Then this proxy class is used to provide controlled access to the real object. It is a very simple solution to restrict access!  More info on the below UML diagram is [here](https://github.com/codewithsitangshu/design-patterns/tree/main/proxy-pattern)
 
+Lets see how we could use Proxy design pattern to solve our problem here. Lets first create an Interface with all the possible methods required for the Order Components.
 
+```java
+public interface OrderComponent {
+    String placeOrder();
+}
+```
+
+I have an Enum for `TestEnvironment`.
+
+```java
+public enum TestEnvironment {
+    DEV,
+    QA,
+    STAGING,
+    PROD
+}
+```
+
+Lets create a real class which implements this interface! This class is responsible for placing order.
+
+```java
+public class OrderComponentReal implements OrderComponent {
+
+    @FindBy(id = "buy")
+    private WebElement buyNow;
+
+    @FindBy(id = "ordernumber")
+    private WebElement orderNumber;
+
+    public OrderComponentReal(WebDriver driver){
+        PageFactory.initElements(driver, this);
+    }
+
+    @Override
+    public String placeOrder() {
+        this.buyNow.click();
+        return this.orderNumber.getText();
+    }
+
+}
+```
+
+Now Lets create a proxy class which implements the same interface!  This class contains a list of all the test environments which do not support Order execution.
+
+```java
+public class OrderComponentProxy implements OrderComponent {
+
+    private static final List<TestEnvironment> restrictEnvironmentList;
+    private OrderComponent orderComponent;
+
+    static{
+        restrictEnvironmentList = new ArrayList<>();
+        restrictEnvironmentList.add(TestEnvironment.PROD);
+        restrictEnvironmentList.add(TestEnvironment.STAGING);
+    }
+
+    public OrderComponentProxy(WebDriver driver){
+        String currentEnv = System.getProperty("env"); // DEV / QA / PROD / STAGING
+        if(!restrictEnvironmentList.contains(currentEnv.toUpperCase())){
+            this.orderComponent = new OrderComponentReal(driver);
+        }
+    }
+
+    @Override
+    public String placeOrder() {
+        if(Objects.nonNull(this.orderComponent)){
+            return this.orderComponent.placeOrder();
+        }else{
+            return "SKIPPED";
+        }
+    }
+}
+```
+
+My `PaymentScreen` class will look something like this. We always use the `OrderComponentProxy` class to create an instance of `OrderComponent`.
+
+```java
+public class PaymentScreen {
+
+    private WebDriver driver;
+    @Getter
+    private UserInformation userInformation;
+    @Getter
+    private OrderComponent orderComponent;
+    private PaymentOption paymentOption;
+
+    public PaymentScreen(final WebDriver driver){
+        this.driver = driver;
+        this.userInformation = new UserInformation(this.driver);
+        this.orderComponent = new OrderComponentProxy(this.driver);
+    }
+
+    public void setPaymentOption(PaymentOption paymentOption) {
+        this.paymentOption = paymentOption;
+        PageFactory.initElements(driver, this.paymentOption);
+    }
+
+    public void pay(Map<String, String> paymentDetails){
+        this.paymentOption.enterPaymentInformation(paymentDetails);
+    }
+
+}
+```
+
+My Test class will look something like this. We pass the test environment for which we need to make a Order execution. Proxy class decides whether to create `OrderComponentReal` object or not – depends on the environment. So, if any of the test environment does not support Order execution, then it is simply skipped.
+
+```java
+public class PaymentScreenTest extends BaseTest {
+
+    private PaymentScreen paymentScreen;
+    private HomePage homePage;
+
+    @BeforeTest(dependsOnMethods = "initDriver")
+    public void setPaymentScreen(){
+        System.setProperty("env", "QA");
+        //System.setProperty("env", "PROD");
+        this.homePage = new HomePage(this.driver);
+        this.paymentScreen = new PaymentScreen(this.driver);
+    }
+
+    @Test(dataProvider = "getData")
+    public void paymentTest(String option, Map<String, String> paymentDetails){
+        this.homePage.goTo();
+        Assert.assertTrue(this.homePage.isAt(), "Unable to navigate to Home Page");
+
+        this.paymentScreen.getUserInformation()
+                .enterDetails("sitangshu", "pal", "example@example.com");
+        this.paymentScreen.setPaymentOption(PaymentOptionFactory.get(option));
+        this.paymentScreen.pay(paymentDetails);
+        String orderNumber = this.paymentScreen.getOrderComponent().placeOrder();
+
+        System.out.println(
+                "Order Number : " + orderNumber
+        );
+        Uninterruptibles.sleepUninterruptibly(3, TimeUnit.SECONDS);
+    }
+
+    @DataProvider
+    public Object[][] getData(){
+
+        Map<String, String> cc = Maps.newHashMap();
+        cc.put("cc", "1231231231");
+        cc.put("year", "2023");
+        cc.put("cvv", "123");
+
+        Map<String, String> nb = Maps.newHashMap();
+        nb.put("bank", "WELLS FARGO");
+        nb.put("account", "myaccount123");
+        nb.put("pin", "999");
+
+        return new Object[][]{
+                {"CC", cc} ,
+                {"NB", nb}
+        };
+    }
+}
+```
+
+## Summary:
+
+The Proxy Design Pattern is a powerful technique used to control access to an object by providing a placeholder or intermediary object. This pattern is particularly useful in test automation when running scripts across different environments, such as development (Dev), quality assurance (QA), staging, and production.
+
+In the provided example, the application workflow involves filling out user details and selecting a payment method (Credit Card, Net Banking, or PayPal). However, the action of placing an order is contingent upon the environment in which the test is being executed:
+
+- **In QA/Dev environments**: The order can be placed without restrictions, as these are lower-risk environments where real-world implications are minimal.
+- **In Staging/Production environments**: The order placement is blocked to prevent unintended consequences in these higher-risk environments.
+
+Traditionally, environment-specific logic would be handled using numerous `if-else` conditions, leading to complex and hard-to-maintain code. The Proxy Design Pattern simplifies this by encapsulating environment-specific access control within a proxy object, eliminating the need for repetitive conditional statements throughout the test scripts.
+
+This approach not only streamlines the automation code but also ensures that operations are carried out safely and appropriately across different environments, making the Proxy Design Pattern an essential tool in a test automation architect's toolkit.
