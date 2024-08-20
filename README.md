@@ -22,3 +22,5 @@ Learning Design Patterns equips us with the knowledge to recognize when and how 
 [Strategy Design Pattern](strategy-pattern/README.md)
 
 [Command Design Pattern](command-pattern/README.md)
+
+[Proxy Design Pattern](proxy-pattern/README.md)
